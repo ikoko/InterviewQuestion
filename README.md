@@ -22,17 +22,19 @@
 
     ​		创建一个 `Observer` 添加到主线程 `runloop` ，开启一个子线程，在子线程中[开启一个持续的循环](https://www.jianshu.com/p/d0aab0eb8ce4)来监控主线程 `runloop` 的状态。如果发现主线程 `runloop` 的状态卡在为 `BeforeSources` 或者 `AfterWaiting` 超过设定的阈值时，说明主线程当前卡顿。
 
-  - **卡顿时长统计**
+  - **堆栈获取**
 
-    
+    https://github.com/woshiccm/RCBacktrace 
 
   - **卡顿函数定位**
 
-    
+    维护一个VC显示栈，卡顿的时候上报栈顶VC
+
+    将符号表和堆栈文件给到后端同一符号化
 
   - **卡顿的堆栈怎么符号化？**
 
-    
+     
 
     
 
@@ -52,13 +54,13 @@
 
   - **APP 启动流程**
 
-    		1. 创建进程，加载可执行文件 Mach - O
-      		2. 加载动态链接库，进行 `rebase` 指针调整和 `bind` 符号绑定
-      		3.  ` Runtime` 初始化，`ObjC` 相关 `Class` 的注册、`category` 注册、`selector` 唯一性检查等
-      		4. 初始化，执行 `+load` 方法、调用 `attribute((constructor))` 修饰的函数、创建 C++ 静态全局变量等
-      		5. 设置线程入口，执行 `main` 函数
-      		6. `didFinishLaunchingWithOptions` ，程序加载完成，设置根视图
-      		7. 首页加载完成
+    			1. 创建进程，加载可执行文件 Mach - O
+     		2. 加载动态链接库，进行 `rebase` 指针调整和 `bind` 符号绑定
+     		3.  ` Runtime` 初始化，`ObjC` 相关 `Class` 的注册、`category` 注册、`selector` 唯一性检查等
+     		4. 初始化，执行 `+load` 方法、调用 `attribute((constructor))` 修饰的函数、创建 C++ 静态全局变量等
+     		5. 设置线程入口，执行 `main` 函数
+     		6. `didFinishLaunchingWithOptions` ，程序加载完成，设置根视图
+     		7. 首页加载完成
 
   - **启动时长定义**
 
@@ -104,15 +106,27 @@
 
 - 整体方案
 
-  通过一个标记位来表示当前模式，改变时发出通知，在Tabbar里接受到通知后处理，改变tabbar颜色，遍历subVC，看有没有实现夜间模式改变的协议函数，实现了即调用
+  通过一个标记位来表示当前模式，改变时发出通知，在Tabbar里接受到通知后处理，改变tabbar颜色，遍历subVC，看有没有实现夜间模式改变的协议函数，实现了即调用，可拓展APP换肤，节日换肤。
+
+- 文本、背景色
+
+  通过plist文件进行映射
 
 - UI 组件
+
+  TableViewCell 注册两套 id，模式改变时刷新table
+
 - 本地图片
+
+  runtime 添加前缀获取，或区分不同Bundle
+
 - 网络图片
-- 热切换
+
+  下载完成时添加滤镜
+
 - 性能
 
-
+  
 
 ### 盲人模式
 
@@ -131,10 +145,17 @@
 ### Crash 防护
 
 - 系统 API 加固
+
+  ​	NSArray、NSDic
+
 - 系统 API 版本检测
-- 野指针防护
+
+  ​	Clang静态检查提供了iOS低版本调用高版本API检查的功能，Build Settings页面，在“Other C Flags”和“Other C++ Flags”中增加“-Wunguarded-availablility”。
+
 - unrecognized selector
+
 - KVO 防护
+
 - Timer 防护
 
 
@@ -149,8 +170,44 @@
 ### 实时涂鸦
 
 - 整体方案
+
+  通过socket传输画笔坐标信息，使用CAShapeLayer绘制
+
 - 数据处理
+
+  
+
 - 界面绘制
+
+
+
+## OC 语言
+
+
+
+- 怎么理解 OC 是动态语言？
+
+- 数组和链表的区别
+
+- 遍历数组时增删数组元素
+
+- NSArray 和 NSSet 有什么不同？
+
+- NSArray 的底层结构
+
+- NSArray copy 和NSMutableArray copy 的区别
+
+- NSString 的底层结构
+
+- `nil`、`NIL`、`NSNULL` 有什么区别？
+
+- 如何定义一台 `iOS` 设备的唯一性?
+
+- 在哪里下载苹果的源代码？- [链接](https://github.com/liberalisman/iOS-InterviewQuestion-collection/blob/master/Foundation/16.第十六题.md)
+
+- isKindOfClass ， isM
+
+- `objc_getClass()`、`object_getClass()`、`Class` 这三个方法用来获取类对象有什么不同？
 
 
 
@@ -163,6 +220,8 @@
 ### [内存分区](evernote:///view/3106006/s17/76b195ad-9c1a-4b8d-82ca-9d1ad8a5a825/76b195ad-9c1a-4b8d-82ca-9d1ad8a5a825/)
 
 ​		iOS的内存分为五个区，代码区、常量区、全局区、堆、栈。常说的内存管理主要是说管理堆上的内存，栈内存是不需要我们管理的，CPU直接管理入栈出栈，比如说每次函数调用的时候都会有入栈操作，如果函数递归调用栈空间一直不释放就会栈溢出。
+
+
 
 ### [引用计数](https://juejin.cn/post/6844903847622606861#heading-25)
 
@@ -178,9 +237,13 @@ struct SideTable {
 }
 ```
 
+
+
 ### [循环引用](https://www.jianshu.com/p/ddfd1b3c0298)
 
 ​		两个对象互相强引用彼此，彼此的引用计数始终都是 `1 `，导致无法释放。比如 `delegate`、`Block`、`Timer`。
+
+
 
 ### [weak](evernote:///view/3106006/s17/42dc51d2-7c96-4193-80a6-c245f194cf32/42dc51d2-7c96-4193-80a6-c245f194cf32/)
 
@@ -195,6 +258,23 @@ struct SideTable {
 ### 总结
 
 ​		`ARC` 在编译期自动插入管理引用计数的代码，`TaggedPointer` 直接存在栈上，`extra_rc` 管理引用计数，思路都是减轻开发负担，减少堆内存开销提高性能，让开发者不必过度关心内存管理。
+
+
+
+- **常见内存泄漏场景**
+
+  - 循环引用。
+  - 注册 NSNotification 没有移除。
+  - Core Foundation 框架的函数没有手动释放。
+  - 大循环产生大量的临时对象，循环结束才释放，可能导致内存泄漏，可在循环中创建 autoReleasePool，及时释放占用内存大的临时变量，减少内存占用峰值。
+
+  
+
+- **如何检测内存泄漏**
+
+  - Analyzer（静态分析）
+  - MLeaksFinder (第三方工具)
+  - Instruments Leaks (动态检测)
 
 
 
@@ -364,7 +444,11 @@ union isa_t  // isa 指针结构
 
 ### 对象、类对象、元类对象
 
+![img](https://user-gold-cdn.xitu.io/2019/7/27/16c3202d97f29bae?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
+- [[self class] 和 [super class] 区别](https://www.jianshu.com/p/6bcef7ebc8af)
+
+  class 函数是基类（NSObject）实现的
 
 ### 消息传递
 
@@ -375,6 +459,12 @@ union isa_t  // isa 指针结构
 
 
 ### Method Swizzling
+
+
+
+
+
+- 对象调用方法的流程
 
 
 
@@ -390,7 +480,7 @@ union isa_t  // isa 指针结构
 
 ### Runloop 的构成
 
-​		一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source/Timer/Observer。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode，这个Mode被称作 CurrentMode。如果需要切换 Mode，只能退出 Loop，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source/Timer/Observer，让其互不影响。
+​		一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source/Timer/Observer。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode，这个Mode被称作 CurrentMode。如果需要切换 Mode，只能w退出 Loop，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source/Timer/Observer，让其互不影响。
 
 ![RunLoop_0](https://blog.ibireme.com/wp-content/uploads/2015/05/RunLoop_0.png)一		
 
@@ -569,9 +659,9 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 - **多线程的缺点**
 
   	1. 512KB的栈空间，以及1KB的内核空间。
-   	2. 如果开启大量的线程，会降低程序的性能。
-   	3. CPU开销大，线程越多CPU调度线程的开销就越大。
-   	4. 增加程序设计复杂性，比如线程之间的通信、多线程的数据共享。
+  	2. 如果开启大量的线程，会降低程序的性能。
+  	3. CPU开销大，线程越多CPU调度线程的开销就越大。
+  	4. 增加程序设计复杂性，比如线程之间的通信、多线程的数据共享。
 
   
 
@@ -680,8 +770,8 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
   - **解决/避免死锁**
 
     	1. **按顺序加锁：**线程间加锁的顺序各不一致，导致死锁，每个线程都按同一个加锁顺序就不会出现死锁。
-     	2. **使用时限锁：**每个获取锁的时候加上个时限，如果超过某个时间就放弃获取锁之类的。
-     	3. **死锁检测：**按线程间获取锁的关系检测线程间是否发生死锁，如果发生死锁就执行一定的策略，如终断线程或回滚操作等。
+    	2. **使用时限锁：**每个获取锁的时候加上个时限，如果超过某个时间就放弃获取锁之类的。
+    	3. **死锁检测：**按线程间获取锁的关系检测线程间是否发生死锁，如果发生死锁就执行一定的策略，如终断线程或回滚操作等。
 
 
 
@@ -805,6 +895,10 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
   ​	使用信号量控制
 
+  
+
+- **YYDispatchQueuePool**
+
 
 
 ### NSOperation
@@ -829,6 +923,24 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ### 异步绘制
 
+​	文本渲染、图像绘制都是比较消耗性能的操作，而UILabel等控件都是在主线程进行的文本绘制。这会对性能产生比较大的影响。异步绘制将耗时的绘制操作放到子线程，减少主线程开销。
+
+​	**CoreGraphic通常是线程安全的，所以可以进行异步绘制，显示的时候再放回主线程**
+
+```objective-c
+- (void)display {
+   dispatch_async(backgroundQueue, ^{
+       CGContextRef ctx = CGBitmapContextCreate(...);
+       // draw in context...
+       CGImageRef img = CGBitmapContextCreateImage(ctx);
+       CFRelease(ctx);
+       dispatch_async(mainQueue, ^{
+           layer.contents = img;
+       });
+   });
+}
+```
+
 
 
 ### 事件传递机制
@@ -837,9 +949,17 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ### 离屏渲染
 
+​	当使用圆角，阴影，遮罩的时候，图层属性的混合体被指定为在未预合成之前不能直接在屏幕中绘制，所以就需要屏幕外渲染被唤起。（参考PS图层合并）所以当使用离屏渲染的时候会很容易造成性能消耗，因为在OPENGL里离屏渲染会单独在内存中创建一个屏幕外缓冲区并进行渲染，而屏幕外缓冲区跟当前屏幕缓冲区上下文切换是很耗性能的。
+
 
 
 ### 界面性能优化
+
+1. **避免主线程阻塞**
+2. **异步绘制**
+3. **简化视图结构**
+4. **简化视图结构**
+5. **Cell高度缓存**
 
 
 
@@ -849,11 +969,35 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ### 动画
 
+- UIView CALayer之间的关系
+
+  - UIView 继承 UIResponder，接收点击事件，CALayer 直接继承 NSObject，并没有相应的处理事件的接口。
+
+  - UIView 是 CALayer 的delegate
+
+  - UIView 主要处理事件，CALayer 负责绘制就更好
+
+  
+
+- 事件响应链
+
+- viewcontroller 生命周期
+
+- setNeedsDisplay` 和 `layoutIfNeeded
+
+- 如何以通用的方法找到当前显示的`ViewController`
+
+- `Bounds` 和 `Frame` 的区别?
+
+- `LoadView`方法了解吗？
+
 
 
 ## 网络
 
 ### HTTP
+
+​	[http协议详解](https://blog.csdn.net/hansionz/article/details/86137260)
 
 - **三次握手** (可以举例小兔子和月亮写信)
 
@@ -880,9 +1024,16 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ### HTTPS
 
+​		[非常详细易懂](https://github.com/youngwind/blog/issues/108)
 
 
-### TCP
+
+### TCP/UDP
+
+​	https://blog.csdn.net/zhang6223284/article/details/81414149
+
+- TCP / UDP 的区别
+  - TCP 面向连接，UDP是无连接的，即发送数据之前不需要建立连接
 
 
 
@@ -962,6 +1113,8 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ### 图片的内存如何计算
 
+### URL 不变，图片资源变了怎么处理
+
 ### 热修复原理
 
 ### 无痕埋点
@@ -971,6 +1124,10 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 ### APP 签名机制
 
 ### Charles原理
+
+​		https://github.com/youngwind/blog/issues/108
+
+
 
 ### 线上闪退追踪解决
 
@@ -1003,7 +1160,85 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ## 算法
 
+### 时间复杂度
+
+### 空间复杂度
+
+
+
+- BFS(广度优先搜索)
+
+ 广度优先搜索算法（Breadth-First-Search），是一种图形搜索算法。简单的说，BFS是从根节点开始，沿着树(图)的宽度遍历树(图)的节点。如果所有节点均被访问，则算法中止。BFS同样属于盲目搜索。一般用队列数据结构来辅助实现BFS算法。
+
+
+
+- DFS（深度优先搜索）
+
+深度优先搜索算法（Depth-First-Search），是搜索算法的一种。它沿着树的深度遍历树的节点，尽可能深的搜索树的分支。当节点v的所有边都己被探寻过，搜索将回溯到发现节点v的那条边的起始节点。这一过程一直进行到已发现从源节点可达的所有节点为止。如果还存在未被发现的节点，则选择其中一个作为源节点并重复以上过程，整个进程反复进行直到所有节点都被访问为止。DFS属于盲目搜索。
+
+ 深度优先搜索是图论中的经典算法，利用深度优先搜索算法可以产生目标图的相应拓扑排序表，利用拓扑排序表可以方便的解决很多相关的图论问题，如最大路径问题等等。一般用堆数据结构来辅助实现DFS算法。
+
+
+### 选择排序
+
+```objective-c
+//选择排序
+- (void)selectionSort 
+{
+	NSMutableArray *array = @[@"3",@"2",@"5",@"4",@"7",@"9",@"8",@"9",@"10",@"33"].mutableCopy;
+	for (int i = 0; i < array.count; i++) {
+		for (int j = i+1; j <array.count ; j++) {
+			if ([array[i] intValue] > [array[j] intValue]) {
+				int temp = [array[i] intValue];
+				array[i] = array[j];
+				array[j] = [NSNumber numberWithInt:temp];
+			}
+		}
+	}
+	NSLog(@"选择排序后: %@",array);
+}
+```
+
+
+
+### 冒泡排序
+
+```objective-c
+///冒泡排序
+- (void)bubbleSort:(NSMutableArray *)arr {
+	//两两比较 需要比较 count - 1 次
+	for (int i = 0; i < arr.count-1; i++) {
+	//以下 for 循环走完后即可将最大值放到最后，此处count-1 后还需要 - i
+		for (int j = 0; j < arr.count-1-i; j++) {
+		// 如果 前面的数大于后面的数，就将这两个数交换位置
+			if ([arr[j] intValue] > [arr[j+1] intValue]) {
+				int temp = [arr[j] intValue];
+				arr[j] = arr[j+1];
+				arr[j+1] = [NSNumber numberWithInt:temp];
+			}
+		}
+	}
+}
+NSMutableArray *arr = @[@2, @4, @9, @8, @1, @0, @3, @5, @2].mutableCopy;
+NSLog(@"%@", arr);
+[self bubbleSort:arr];
+NSLog(@"%@", arr);
+```
+
+
+
 ### 字符串反转
+
+```objective-c
+- (NSString *)stringByReversed:(NSString *)str
+{
+    NSMutableString *mutableSgtr = [[NSMutableString alloc]init];
+    for (NSInteger i = str.length; i>0; i--) {
+        [mutableSgtr appendString:[str substringWithRange:NSMakeRange(i-1, 1)]];
+    }
+    return mutableSgtr;
+}
+```
 
 
 
@@ -1016,6 +1251,41 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 
 ### 有序数组合并
+
+```objective-c
+- (NSArray *)mergeOrderArrayWithFirstArray: (NSMutableArray *)array1 secondArray: (NSMutableArray *)array2 {
+  // 全为空不处理
+  if (!array1.count && !array2.count) {
+    return @[];
+  }
+  // 一个为空返回另外一个
+  if (!array1.count) {
+    return array2;
+  }
+  if (!array2.count) {
+    return array1;
+  }
+  NSMutableArray *endArray = [NSMutableArray array];
+  while (1) {
+    if ([array1[0] integerValue] < [array2[0] integerValue]) {
+      [endArray addObject:array1[0]];
+      [array1 removeObjectAtIndex:0];
+    }else {
+      [endArray addObject:array2[0]];
+      [array2 removeObjectAtIndex:0];
+    }
+    if (!array1.count) {
+      [endArray addObjectsFromArray:array2];
+      break;
+    }
+    if (!array2.count) {
+      [endArray addObjectsFromArray:array1];
+      break;
+    }
+  }
+  return endArray;
+}
+```
 
 
 
